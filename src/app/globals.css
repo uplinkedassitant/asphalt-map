@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+  --asphalt: #0e0f11;
+  --asphalt-mid: #16181c;
+  --asphalt-surface: #1e2026;
+  --asphalt-border: #2a2d35;
+  --asphalt-hover: #252830;
+  --amber: #f59e0b;
+  --amber-light: #fbbf24;
+  --amber-dim: rgba(245,158,11,0.12);
+  --green-open: #22c55e;
+  --red-closed: #ef4444;
+  --text-primary: #f1f2f4;
+  --text-secondary: #8b909e;
+  --text-muted: #555b6a;
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  font-family: 'Barlow', system-ui, sans-serif;
+  background: var(--asphalt);
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--asphalt-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3f4d; }
+
+.leaflet-popup-content-wrapper {
+  background: var(--asphalt-surface) !important;
+  border: 1px solid var(--asphalt-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
+  padding: 0 !important;
+  overflow: hidden;
+  color: var(--text-primary) !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  min-width: 240px;
+  max-width: 280px;
+}
+.leaflet-popup-tip-container { display: none; }
+.leaflet-popup-close-button {
+  color: var(--text-secondary) !important;
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 18px !important;
+}
+.leaflet-popup-close-button:hover { color: var(--text-primary) !important; }
+
+.leaflet-control-zoom {
+  border: 1px solid var(--asphalt-border) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+.leaflet-control-zoom a {
+  background: var(--asphalt-surface) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid var(--asphalt-border) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+.leaflet-control-zoom a:hover {
+  background: var(--asphalt-hover) !important;
+  color: var(--text-primary) !important;
+}
+.leaflet-control-zoom-out { border-bottom: none !important; }
+
+.leaflet-control-attribution {
+  background: rgba(14,15,17,0.85) !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a { color: var(--text-muted) !important; }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-in { animation: slide-in 0.15s ease-out forwards; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fade-up 0.2s ease-out forwards; }
