@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, RefreshCw, ChevronLeft, ChevronRight, Layers } from "lucide-react";
 
 interface ToolbarProps {
   onLocate: () => void;
@@ -24,36 +24,86 @@ export default function Toolbar({
   totalCount,
 }: ToolbarProps) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border-b border-zinc-700 z-10 shrink-0">
+    <div
+      className="flex items-center gap-2 px-3 py-0 shrink-0 z-10"
+      style={{
+        background: "var(--asphalt-mid)",
+        borderBottom: "1px solid var(--asphalt-border)",
+        height: "52px",
+      }}
+    >
       {/* Sidebar toggle */}
       <button
         onClick={onToggleSidebar}
-        className="p-2 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
+        style={{ color: "var(--text-secondary)" }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.background = "var(--asphalt-hover)";
+          (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+        }}
         title={sidebarOpen ? "Hide list" : "Show list"}
       >
-        {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        {sidebarOpen ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
       </button>
 
-      {/* App title */}
-      <div className="flex items-center gap-2 mr-auto">
-        <span className="text-orange-500 font-bold text-sm tracking-tight">
-          🛣 AsphaltMap
-        </span>
-        <span className="text-xs text-zinc-500 hidden sm:block">
-          {openCount} of {totalCount} open now
-        </span>
+      {/* Logo + Title */}
+      <div className="flex items-center gap-2.5 mr-auto">
+        <div
+          className="flex items-center justify-center w-7 h-7 rounded"
+          style={{ background: "var(--amber)", flexShrink: 0 }}
+        >
+          <Layers size={14} color="#0e0f11" strokeWidth={2.5} />
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span
+            className="font-bold tracking-tight"
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: "17px",
+              letterSpacing: "0.01em",
+              color: "var(--text-primary)",
+            }}
+          >
+            ASPHALT<span style={{ color: "var(--amber)" }}>MAP</span>
+          </span>
+          <span
+            className="hidden sm:inline text-xs rounded px-1.5 py-0.5"
+            style={{
+              background: openCount > 0 ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.1)",
+              color: openCount > 0 ? "#4ade80" : "#f87171",
+              border: `1px solid ${openCount > 0 ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {openCount}/{totalCount} open
+          </span>
+        </div>
       </div>
 
-      {/* Find closest open */}
+      {/* Find Closest */}
       <button
         onClick={onLocate}
         disabled={locating}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors"
+        className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          background: "var(--amber)",
+          color: "#0e0f11",
+          fontFamily: "'Barlow', sans-serif",
+          letterSpacing: "0.02em",
+        }}
+        onMouseEnter={e => {
+          if (!locating) (e.currentTarget as HTMLElement).style.background = "var(--amber-light)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.background = "var(--amber)";
+        }}
       >
-        <MapPin size={13} className={locating ? "animate-bounce" : ""} />
-        <span className="hidden sm:inline">
-          {locating ? "Locating…" : "Find Closest Open"}
-        </span>
+        <MapPin size={12} className={locating ? "animate-bounce" : ""} />
+        <span className="hidden sm:inline">{locating ? "Locating…" : "Find Closest"}</span>
         <span className="sm:hidden">{locating ? "…" : "Locate"}</span>
       </button>
 
@@ -61,13 +111,19 @@ export default function Toolbar({
       <button
         onClick={onRefresh}
         disabled={refreshing}
-        className="p-2 rounded-lg hover:bg-zinc-700 disabled:opacity-50 text-zinc-400 hover:text-white transition-colors"
-        title="Refresh plant data"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors disabled:opacity-40"
+        style={{ color: "var(--text-secondary)" }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLElement).style.background = "var(--asphalt-hover)";
+          (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+        }}
+        title="Refresh"
       >
-        <RefreshCw
-          size={14}
-          className={refreshing ? "animate-spin" : ""}
-        />
+        <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
       </button>
     </div>
   );

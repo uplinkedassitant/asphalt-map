@@ -9,12 +9,22 @@ import PlantList from "./PlantList";
 import PlantDetail from "./PlantDetail";
 import Toolbar from "./Toolbar";
 
-// Dynamic import prevents SSR issues with Leaflet
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div className="flex-1 bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm">
-      Loading map…
+    <div
+      className="flex-1 flex items-center justify-center text-sm"
+      style={{ background: "var(--asphalt)", color: "var(--text-muted)" }}
+    >
+      <div className="flex flex-col items-center gap-3">
+        <div
+          className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "var(--asphalt-border)", borderTopColor: "var(--amber)" }}
+        />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em" }}>
+          LOADING MAP…
+        </span>
+      </div>
     </div>
   ),
 });
@@ -38,28 +48,21 @@ export default function AsphaltApp() {
     setRefreshing(false);
   }, [userCoords]);
 
-  // Initial load
-  useEffect(() => {
-    loadPlants();
-  }, []); // eslint-disable-line
+  useEffect(() => { loadPlants(); }, []); // eslint-disable-line
 
-  // Re-enrich when userCoords changes (adds distance)
   useEffect(() => {
     if (rawPlants.length > 0) {
       setPlants(enrichPlants(rawPlants, userCoords ?? undefined));
     }
   }, [userCoords, rawPlants]);
 
-  // Auto-refresh open/closed status every minute
   useEffect(() => {
     refreshIntervalRef.current = setInterval(() => {
       if (rawPlants.length > 0) {
         setPlants(enrichPlants(rawPlants, userCoords ?? undefined));
       }
     }, 60_000);
-    return () => {
-      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
-    };
+    return () => { if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current); };
   }, [rawPlants, userCoords]);
 
   const handleLocate = useCallback(() => {
@@ -73,8 +76,6 @@ export default function AsphaltApp() {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserCoords(coords);
         setLocating(false);
-
-        // Find closest open plant
         const enriched = enrichPlants(rawPlants, coords);
         const openPlants = enriched.filter((p) => p.isOpen);
         if (openPlants.length === 0) {
@@ -102,7 +103,6 @@ export default function AsphaltApp() {
   const selectedPlant = plants.find((p) => p.id === selectedId) ?? null;
   const openCount = plants.filter((p) => p.isOpen).length;
 
-  // Sort: open first, then by distance if available, then alphabetically
   const sortedPlants = [...plants].sort((a, b) => {
     if (a.isOpen !== b.isOpen) return a.isOpen ? -1 : 1;
     if (a.distance != null && b.distance != null) return a.distance - b.distance;
@@ -110,7 +110,7 @@ export default function AsphaltApp() {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-900 text-zinc-100 overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "var(--asphalt)" }}>
       <Toolbar
         onLocate={handleLocate}
         onRefresh={handleRefresh}
@@ -125,32 +125,46 @@ export default function AsphaltApp() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-          className={`flex flex-col bg-zinc-900 border-r border-zinc-700 transition-all duration-200 overflow-hidden ${
-            sidebarOpen ? "w-72 sm:w-80" : "w-0"
-          }`}
+          className="flex flex-col overflow-hidden transition-all duration-200"
+          style={{
+            width: sidebarOpen ? "300px" : "0px",
+            minWidth: sidebarOpen ? "300px" : "0px",
+            background: "var(--asphalt-mid)",
+            borderRight: "1px solid var(--asphalt-border)",
+          }}
         >
-          {selectedPlant ? (
-            <PlantDetail
-              plant={selectedPlant}
-              onClose={() => setSelectedId(null)}
-            />
-          ) : (
+          {sidebarOpen && (
             <>
-              <div className="px-4 py-2.5 border-b border-zinc-800">
-                <p className="text-xs text-zinc-500 font-medium">
-                  {userCoords ? "Sorted by distance" : "Sorted by status, then name"}
-                </p>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <PlantList
-                  plants={sortedPlants}
-                  selectedId={selectedId}
-                  onSelectPlant={(id) => {
-                    setSelectedId(id);
-                  }}
-                  loading={loading}
-                />
-              </div>
+              {selectedPlant ? (
+                <PlantDetail plant={selectedPlant} onClose={() => setSelectedId(null)} />
+              ) : (
+                <>
+                  {/* Sidebar header */}
+                  <div
+                    className="px-3 py-2.5 shrink-0"
+                    style={{ borderBottom: "1px solid var(--asphalt-border)" }}
+                  >
+                    <p
+                      className="text-xs uppercase tracking-widest"
+                      style={{
+                        color: "var(--text-muted)",
+                        fontFamily: "'Barlow Condensed', sans-serif",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      {userCoords ? "Sorted by distance" : "Sorted by status"}
+                    </p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    <PlantList
+                      plants={sortedPlants}
+                      selectedId={selectedId}
+                      onSelectPlant={(id) => setSelectedId(id)}
+                      loading={loading}
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
