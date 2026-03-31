@@ -4,13 +4,14 @@ import { useEffect, useRef } from "react";
 import { Plant } from "@/types/plant";
 
 interface MapViewProps {
+  fitBoundsTo?: { lat: number; lng: number }[] | null;
   plants: Plant[];
   selectedId: string | null;
   onSelectPlant: (id: string) => void;
   userCoords?: { lat: number; lng: number } | null;
 }
 
-export default function MapView({ plants, selectedId, onSelectPlant, userCoords }: MapViewProps) {
+export default function MapView({ plants, selectedId, onSelectPlant, userCoords, fitBoundsTo }: MapViewProps) {
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -96,6 +97,15 @@ export default function MapView({ plants, selectedId, onSelectPlant, userCoords 
       .bindPopup("<div style='font-size:12px;padding:4px 2px'>📍 Your Location</div>");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userCoords]);
+
+  // Fit map to show both user location and nearest plant
+  useEffect(() => {
+    if (!mapRef.current || !leafletRef.current || !fitBoundsTo || fitBoundsTo.length < 2) return;
+    const L = leafletRef.current;
+    const bounds = L.latLngBounds(fitBoundsTo.map((p: { lat: number; lng: number }) => [p.lat, p.lng]));
+    mapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 11, animate: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitBoundsTo]);
 
   function renderMarkers(L: any, map: any) {
     markersRef.current.forEach((m) => m.remove());

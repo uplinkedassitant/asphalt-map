@@ -36,6 +36,7 @@ export default function AsphaltApp() {
   const [refreshing, setRefreshing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [listExpanded, setListExpanded] = useState(true);
+  const [fitBoundsTo, setFitBoundsTo] = useState<{lat:number;lng:number}[]|null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -90,6 +91,8 @@ export default function AsphaltApp() {
         setSelectedId(closest.id);
         setSidebarOpen(true);
         setListExpanded(true);
+        // Fit map to show both user and closest plant
+        setFitBoundsTo([coords, { lat: closest.latitude, lng: closest.longitude }]);
       },
       (err) => { setLocating(false); alert(`Could not get location: ${err.message}`); }
     );
@@ -205,6 +208,9 @@ export default function AsphaltApp() {
           </div>
         )}
 
+        {/* Divider between list and map */}
+        <div style={{ height: '6px', background: 'var(--border)', flexShrink: 0 }} />
+
         {/* Map — fills remaining space */}
         <div style={{ flex: 1, minHeight: 0 }}>
           <MapView
@@ -212,6 +218,7 @@ export default function AsphaltApp() {
             selectedId={selectedId}
             onSelectPlant={id => { setSelectedId(id); setListExpanded(true); }}
             userCoords={userCoords}
+            fitBoundsTo={fitBoundsTo}
           />
         </div>
       </div>
