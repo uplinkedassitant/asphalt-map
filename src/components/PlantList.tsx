@@ -30,7 +30,7 @@ export default function PlantList({
           <div
             key={i}
             className="rounded-xl animate-pulse"
-            style={{ height: "72px", background: "var(--asphalt-surface)", animationDelay: `${i * 80}ms` }}
+            style={{ height: "72px", background: "var(--surface)", animationDelay: `${i * 80}ms` }}
           />
         ))}
       </div>
@@ -70,14 +70,14 @@ export default function PlantList({
           onClick={() => setShowAll((v) => !v)}
           className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-semibold transition-colors mt-0.5"
           style={{
-            background: "var(--asphalt-surface)",
-            border: "1px solid var(--asphalt-border)",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             color: "var(--text-secondary)",
             fontFamily: "'Barlow Condensed', sans-serif",
             letterSpacing: "0.06em",
           }}
           onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "#3a3f4d"; el.style.color = "var(--text-primary)"; }}
-          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "var(--asphalt-border)"; el.style.color = "var(--text-secondary)"; }}
+          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "var(--border)"; el.style.color = "var(--text-secondary)"; }}
         >
           <ChevronDown
             size={13}
@@ -106,22 +106,22 @@ function PlantCard({
       onClick={onSelect}
       className="w-full text-left rounded-xl p-3 transition-all duration-150 focus:outline-none slide-in"
       style={{
-        background: isSelected ? "var(--asphalt-hover)" : "var(--asphalt-surface)",
-        border: `1px solid ${isSelected ? "var(--amber)" : "var(--asphalt-border)"}`,
+        background: isSelected ? "var(--hover)" : "var(--surface)",
+        border: `1px solid ${isSelected ? "var(--amber)" : "var(--border)"}`,
         animationDelay: `${index * 30}ms`,
       }}
       onMouseEnter={e => {
         if (!isSelected) {
           const el = e.currentTarget as HTMLElement;
           el.style.borderColor = "#3a3f4d";
-          el.style.background = "var(--asphalt-hover)";
+          el.style.background = "var(--hover)";
         }
       }}
       onMouseLeave={e => {
         if (!isSelected) {
           const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "var(--asphalt-border)";
-          el.style.background = "var(--asphalt-surface)";
+          el.style.borderColor = "var(--border)";
+          el.style.background = "var(--surface)";
         }
       }}
     >
@@ -167,7 +167,7 @@ function StatusBadge({ isOpen }: { isOpen: boolean }) {
       className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
       style={{
         background: isOpen ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-        color: isOpen ? "#4ade80" : "#f87171",
+        color: isOpen ? "#16a34a" : "#dc2626",
         border: `1px solid ${isOpen ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
         fontFamily: "'Barlow Condensed', sans-serif",
         letterSpacing: "0.05em",

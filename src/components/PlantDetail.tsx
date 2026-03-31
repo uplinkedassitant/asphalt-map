@@ -17,7 +17,7 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
   const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
   return (
-    <div className="flex flex-col h-full fade-up" style={{ background: "var(--asphalt-mid)" }}>
+    <div className="flex flex-col h-full fade-up" style={{ background: "var(--surface-mid)" }}>
       {/* Header */}
       <div
         className="px-4 pt-4 pb-3 shrink-0"
@@ -30,8 +30,8 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
                 style={{
-                  background: plant.isOpen ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.1)",
-                  color: plant.isOpen ? "#4ade80" : "#f87171",
+                  background: plant.isOpen ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.08)",
+                  color: plant.isOpen ? "#16a34a" : "#dc2626",
                   border: `1px solid ${plant.isOpen ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
                   fontFamily: "'Barlow Condensed', sans-serif",
                   letterSpacing: "0.06em",
@@ -77,7 +77,7 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
             className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-colors mt-0.5"
             style={{ color: "var(--text-muted)" }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background = "var(--asphalt-hover)";
+              (e.currentTarget as HTMLElement).style.background = "var(--hover)";
               (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
             }}
             onMouseLeave={e => {
@@ -100,13 +100,13 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
               href={`tel:${plant.phone}`}
               className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors"
               style={{
-                background: "var(--asphalt-surface)",
-                border: "1px solid var(--asphalt-border)",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
                 color: "var(--text-primary)",
                 fontFamily: "'Barlow', sans-serif",
               }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "#3a3f4d"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--asphalt-border)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"}
             >
               <Phone size={13} style={{ color: "var(--amber)" }} />
               Call
@@ -141,8 +141,8 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
                 key={s}
                 className="px-2.5 py-1 rounded-lg text-xs"
                 style={{
-                  background: "var(--asphalt-surface)",
-                  border: "1px solid var(--asphalt-border)",
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
                   color: "var(--text-secondary)",
                   fontFamily: "'Barlow', sans-serif",
                 }}
@@ -158,7 +158,7 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
           <SectionLabel icon={<Clock size={11} />} label="Hours" />
           <div
             className="mt-2 rounded-xl overflow-hidden"
-            style={{ border: "1px solid var(--asphalt-border)" }}
+            style={{ border: "1px solid var(--border)" }}
           >
             {schedule.map(({ day, hours }) => {
               const isToday = day === today;
@@ -167,7 +167,7 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
                   key={day}
                   className="flex justify-between items-center px-3 py-2 text-xs"
                   style={{
-                    background: isToday ? "var(--asphalt-hover)" : "transparent",
+                    background: isToday ? "var(--hover)" : "transparent",
                     borderBottom: "1px solid var(--asphalt-border)",
                   }}
                 >
@@ -201,8 +201,8 @@ export default function PlantDetail({ plant, onClose }: PlantDetailProps) {
             <p
               className="mt-2 text-xs leading-relaxed rounded-xl p-3 italic"
               style={{
-                background: "var(--asphalt-surface)",
-                border: "1px solid var(--asphalt-border)",
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
                 color: "var(--text-secondary)",
               }}
             >

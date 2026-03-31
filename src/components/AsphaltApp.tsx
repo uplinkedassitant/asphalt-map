@@ -13,11 +13,11 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center" style={{ background: "#e5e7eb" }}>
+    <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-mid)" }}>
       <div className="flex flex-col items-center gap-3">
         <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: "#d1d5db", borderTopColor: "#f59e0b" }} />
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", color: "#6b7280", fontSize: "13px" }}>
+          style={{ borderColor: "var(--border)", borderTopColor: "var(--amber)" }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", color: "var(--text-muted)", fontSize: "13px" }}>
           LOADING MAP…
         </span>
       </div>
@@ -35,16 +35,22 @@ export default function AsphaltApp() {
   const [locating, setLocating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  // Mobile: is the list panel expanded or collapsed?
   const [listExpanded, setListExpanded] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  // Apply dark mode to <html> element
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   const loadPlants = useCallback(async () => {
     const data = await fetchPlants();
@@ -112,34 +118,33 @@ export default function AsphaltApp() {
       refreshing={refreshing}
       openCount={openCount}
       totalCount={plants.length}
+      darkMode={darkMode}
+      onToggleDark={() => setDarkMode(v => !v)}
     />
   );
 
-  // ── Mobile: vertical stack — toolbar / list panel / map ──
+  // ── Mobile layout ──
   if (isMobile) {
+    // List panel is ~38vh when expanded, giving map ~62vh minus toolbar
+    const LIST_HEIGHT = "38vh";
+
     return (
-      <div
-        className="flex flex-col"
-        style={{ height: "100dvh", background: "var(--asphalt)", overflow: "hidden" }}
-      >
-        {/* 1. Toolbar — always visible at top */}
+      <div className="flex flex-col" style={{ height: "100dvh", background: "var(--bg)", overflow: "hidden" }}>
         {toolbar}
 
-        {/* 2. Plant list panel — collapsible */}
-        <div
-          style={{
-            background: "var(--asphalt-mid)",
-            borderBottom: "1px solid var(--asphalt-border)",
-            flexShrink: 0,
-            overflow: "hidden",
-            transition: "max-height 0.25s ease",
-            maxHeight: listExpanded ? "52vh" : "0px",
-          }}
-        >
+        {/* Plant list panel */}
+        <div style={{
+          background: "var(--surface-mid)",
+          borderBottom: "1px solid var(--border)",
+          flexShrink: 0,
+          overflow: "hidden",
+          transition: "max-height 0.25s ease",
+          maxHeight: listExpanded ? LIST_HEIGHT : "0px",
+        }}>
           {/* Panel header */}
           <div
             className="flex items-center px-3 cursor-pointer select-none"
-            style={{ height: "40px", borderBottom: "1px solid var(--asphalt-border)" }}
+            style={{ height: "40px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}
             onClick={() => setListExpanded(v => !v)}
           >
             {selectedPlant ? (
@@ -147,22 +152,18 @@ export default function AsphaltApp() {
                 <button
                   onClick={e => { e.stopPropagation(); setSelectedId(null); }}
                   className="flex items-center justify-center rounded-md mr-2 shrink-0"
-                  style={{ width: "22px", height: "22px", background: "var(--asphalt-surface)", color: "var(--text-muted)" }}
+                  style={{ width: "22px", height: "22px", background: "var(--hover)", border: "1px solid var(--border)", color: "var(--text-muted)" }}
                 >
                   <X size={11} />
                 </button>
-                <span
-                  className="text-sm font-semibold truncate flex-1"
-                  style={{ color: "var(--text-primary)", fontFamily: "'Barlow', sans-serif" }}
-                >
+                <span className="text-sm font-semibold truncate flex-1"
+                  style={{ color: "var(--text-primary)", fontFamily: "'Barlow', sans-serif" }}>
                   {selectedPlant.name}
                 </span>
               </>
             ) : (
-              <span
-                className="text-xs uppercase flex-1"
-                style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
-              >
+              <span className="text-xs uppercase flex-1"
+                style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>
                 {userCoords ? "Sorted by distance" : "Sorted by status"} · {plants.length} plants
               </span>
             )}
@@ -172,8 +173,7 @@ export default function AsphaltApp() {
             }
           </div>
 
-          {/* Scrollable list or detail */}
-          <div style={{ overflowY: "auto", maxHeight: "calc(52vh - 40px)" }}>
+          <div style={{ overflowY: "auto", maxHeight: `calc(${LIST_HEIGHT} - 40px)` }}>
             {selectedPlant ? (
               <div className="px-4 py-3">
                 <MobilePlantDetail plant={selectedPlant} />
@@ -182,7 +182,7 @@ export default function AsphaltApp() {
               <PlantList
                 plants={sortedPlants}
                 selectedId={selectedId}
-                onSelectPlant={id => { setSelectedId(id); }}
+                onSelectPlant={id => setSelectedId(id)}
                 loading={loading}
                 initialVisible={4}
               />
@@ -190,28 +190,22 @@ export default function AsphaltApp() {
           </div>
         </div>
 
-        {/* Collapsed strip — tap to re-open list */}
+        {/* Collapsed strip */}
         {!listExpanded && (
           <div
             className="flex items-center justify-between px-3 cursor-pointer select-none shrink-0"
-            style={{
-              height: "36px",
-              background: "var(--asphalt-mid)",
-              borderBottom: "1px solid var(--asphalt-border)",
-            }}
+            style={{ height: "36px", background: "var(--surface)", borderBottom: "1px solid var(--border)" }}
             onClick={() => setListExpanded(true)}
           >
-            <span
-              className="text-xs uppercase"
-              style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
-            >
-              {plants.length} plants · {openCount} open
+            <span className="text-xs uppercase"
+              style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>
+              {plants.length} plants · {openCount} open — tap to expand
             </span>
             <ChevronDown size={13} style={{ color: "var(--text-muted)" }} />
           </div>
         )}
 
-        {/* 3. Map — fills remaining space */}
+        {/* Map — fills remaining space */}
         <div style={{ flex: 1, minHeight: 0 }}>
           <MapView
             plants={plants}
@@ -224,12 +218,9 @@ export default function AsphaltApp() {
     );
   }
 
-  // ── Desktop: sidebar + map side by side ──
+  // ── Desktop layout ──
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: "100dvh", background: "var(--asphalt)", overflow: "hidden" }}
-    >
+    <div className="flex flex-col" style={{ height: "100dvh", background: "var(--bg)", overflow: "hidden" }}>
       {toolbar}
       <div className="flex flex-1" style={{ minHeight: 0 }}>
         {/* Sidebar */}
@@ -237,8 +228,8 @@ export default function AsphaltApp() {
           className="flex flex-col shrink-0 overflow-hidden transition-all duration-200"
           style={{
             width: sidebarOpen ? "300px" : "0px",
-            background: "var(--asphalt-mid)",
-            borderRight: "1px solid var(--asphalt-border)",
+            background: "var(--surface-mid)",
+            borderRight: "1px solid var(--border)",
           }}
         >
           {sidebarOpen && (
@@ -246,39 +237,22 @@ export default function AsphaltApp() {
               <PlantDetail plant={selectedPlant} onClose={() => setSelectedId(null)} />
             ) : (
               <>
-                <div
-                  className="px-3 py-2.5 shrink-0"
-                  style={{ borderBottom: "1px solid var(--asphalt-border)" }}
-                >
-                  <p
-                    className="text-xs uppercase"
-                    style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
-                  >
+                <div className="px-3 py-2.5 shrink-0" style={{ borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
+                  <p className="text-xs uppercase"
+                    style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>
                     {userCoords ? "Sorted by distance" : "Sorted by status"}
                   </p>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  <PlantList
-                    plants={sortedPlants}
-                    selectedId={selectedId}
-                    onSelectPlant={id => setSelectedId(id)}
-                    loading={loading}
-                    initialVisible={6}
-                  />
+                  <PlantList plants={sortedPlants} selectedId={selectedId} onSelectPlant={id => setSelectedId(id)} loading={loading} initialVisible={6} />
                 </div>
               </>
             )
           )}
         </div>
-
         {/* Map */}
         <div className="flex-1">
-          <MapView
-            plants={plants}
-            selectedId={selectedId}
-            onSelectPlant={id => { setSelectedId(id); setSidebarOpen(true); }}
-            userCoords={userCoords}
-          />
+          <MapView plants={plants} selectedId={selectedId} onSelectPlant={id => { setSelectedId(id); setSidebarOpen(true); }} userCoords={userCoords} />
         </div>
       </div>
     </div>
@@ -294,35 +268,30 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
   return (
     <div className="space-y-4 pb-4">
       <div>
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
           style={{
             background: plant.isOpen ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.1)",
-            color: plant.isOpen ? "#4ade80" : "#f87171",
-            border: `1px solid ${plant.isOpen ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
+            color: plant.isOpen ? "#16a34a" : "#dc2626",
+            border: `1px solid ${plant.isOpen ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.25)"}`,
             fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.06em",
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: plant.isOpen ? "#4ade80" : "#f87171", display: "inline-block" }} />
+          }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: plant.isOpen ? "#16a34a" : "#dc2626", display: "inline-block" }} />
           {plant.statusText}
         </span>
         <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>{plant.address}</p>
-        {plant.distance != null && (
-          <p className="text-xs mt-0.5" style={{ color: "var(--amber)" }}>{plant.distance.toFixed(1)} miles away</p>
-        )}
+        {plant.distance != null && <p className="text-xs mt-0.5 font-semibold" style={{ color: "var(--amber)" }}>{plant.distance.toFixed(1)} miles away</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         {plant.phone ? (
-          <a href={`tel:${plant.phone}`}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-primary)" }}>
+          <a href={`tel:${plant.phone}`} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+            style={{ background: "var(--hover)", border: "1px solid var(--border)", color: "var(--text-primary)" }}>
             📞 Call
           </a>
         ) : <div />}
         <a href={directionsUrl} target="_blank" rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
-          style={{ background: "var(--amber)", color: "#0e0f11" }}>
+          style={{ background: "var(--amber)", color: "#fff" }}>
           🧭 Directions
         </a>
       </div>
@@ -332,19 +301,17 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
         <div className="flex flex-wrap gap-1.5">
           {plant.services.map(s => (
             <span key={s} className="px-2.5 py-1 rounded-lg text-xs"
-              style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>
-              {s}
-            </span>
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}>{s}</span>
           ))}
         </div>
       </div>
 
       <div>
         <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>Hours</p>
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--asphalt-border)" }}>
-          {schedule.map(({ day, hours }) => (
+        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          {schedule.map(({ day, hours }: { day: string; hours: string }) => (
             <div key={day} className="flex justify-between px-3 py-2 text-xs"
-              style={{ background: day === today ? "var(--asphalt-hover)" : "transparent", borderBottom: "1px solid var(--asphalt-border)" }}>
+              style={{ background: day === today ? "var(--hover)" : "var(--surface)", borderBottom: "1px solid var(--border)" }}>
               <span style={{ color: day === today ? "var(--amber)" : "var(--text-secondary)", fontWeight: day === today ? 600 : 400 }}>{day}</span>
               <span style={{ color: hours === "Closed" ? "var(--text-muted)" : "var(--text-secondary)" }}>{hours}</span>
             </div>
@@ -356,9 +323,7 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
         <div>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>Notes</p>
           <p className="text-xs leading-relaxed rounded-xl p-3 italic"
-            style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>
-            {plant.notes}
-          </p>
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}>{plant.notes}</p>
         </div>
       )}
     </div>
