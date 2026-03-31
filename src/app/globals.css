@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #__next {
+  height: 100%;
+}
+
+/* Override Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  min-width: 220px;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+}
+
+/* Smooth sidebar transition */
+.sidebar-enter {
+  width: 0;
+}
+.sidebar-enter-active {
+  width: 320px;
+  transition: width 200ms ease;
+}
