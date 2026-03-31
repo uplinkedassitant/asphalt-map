@@ -13,18 +13,10 @@ import { ChevronUp, ChevronDown, X } from "lucide-react";
 const MapView = dynamic(() => import("./MapView"), {
   ssr: false,
   loading: () => (
-    <div
-      className="w-full h-full flex items-center justify-center text-sm"
-      style={{ background: "#e5e7eb", color: "#6b7280" }}
-    >
+    <div className="w-full h-full flex items-center justify-center" style={{ background: "#e5e7eb" }}>
       <div className="flex flex-col items-center gap-3">
-        <div
-          className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: "#d1d5db", borderTopColor: "#f59e0b" }}
-        />
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em" }}>
-          LOADING MAP…
-        </span>
+        <div className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#d1d5db", borderTopColor: "#f59e0b" }} />
+        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.08em", color: "#6b7280", fontSize: "13px" }}>LOADING MAP…</span>
       </div>
     </div>
   ),
@@ -48,7 +40,16 @@ export default function AsphaltApp() {
   const [locating, setLocating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [sheetState, setSheetState] = useState<SheetState>("peek");
+  const [isMobile, setIsMobile] = useState(false);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Detect mobile via JS — avoids Tailwind SSR/hydration mismatch causing both layouts to show
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const loadPlants = useCallback(async () => {
     const data = await fetchPlants();
@@ -104,25 +105,113 @@ export default function AsphaltApp() {
     return a.name.localeCompare(b.name);
   });
 
-  return (
-    <div
-      className="flex flex-col overflow-hidden"
-      style={{ height: "100dvh", background: "var(--asphalt)" }}
-    >
-      {/* ── Toolbar — always at top, never overlapped ── */}
-      <Toolbar
-        onLocate={handleLocate}
-        onRefresh={handleRefresh}
-        onToggleSidebar={() => setSidebarOpen(v => !v)}
-        sidebarOpen={sidebarOpen}
-        locating={locating}
-        refreshing={refreshing}
-        openCount={openCount}
-        totalCount={plants.length}
-      />
+  const toolbar = (
+    <Toolbar
+      onLocate={handleLocate}
+      onRefresh={handleRefresh}
+      onToggleSidebar={() => setSidebarOpen(v => !v)}
+      sidebarOpen={sidebarOpen}
+      locating={locating}
+      refreshing={refreshing}
+      openCount={openCount}
+      totalCount={plants.length}
+    />
+  );
 
-      {/* ── Desktop layout (sm+) ── */}
-      <div className="hidden sm:flex flex-1 overflow-hidden">
+  // ── Mobile layout ──
+  if (isMobile) {
+    return (
+      <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "var(--asphalt)" }}>
+        {toolbar}
+
+        {/* Map + bottom sheet */}
+        <div className="flex-1 relative overflow-hidden" style={{ minHeight: 0 }}>
+          {/* Map fills full area */}
+          <div className="absolute inset-0">
+            <MapView
+              plants={plants}
+              selectedId={selectedId}
+              onSelectPlant={id => { setSelectedId(id); setSheetState("half"); }}
+              userCoords={userCoords}
+            />
+          </div>
+
+          {/* Bottom sheet */}
+          <div
+            className="absolute bottom-0 left-0 right-0 flex flex-col rounded-t-2xl overflow-hidden"
+            style={{
+              height: SHEET_HEIGHTS[sheetState],
+              background: "var(--asphalt-mid)",
+              borderTop: "1px solid var(--asphalt-border)",
+              boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
+              transition: "height 0.25s cubic-bezier(0.32,0.72,0,1)",
+              zIndex: 400,
+            }}
+          >
+            {/* Handle row */}
+            <div
+              className="relative flex items-center px-4 shrink-0 cursor-pointer select-none"
+              style={{ height: "44px", borderBottom: sheetState !== "peek" ? "1px solid var(--asphalt-border)" : "none" }}
+              onClick={() => setSheetState(s => s === "peek" ? "half" : s === "half" ? "full" : "peek")}
+            >
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full" style={{ width: "36px", height: "4px", background: "var(--asphalt-border)" }} />
+
+              {sheetState === "peek" ? (
+                <div className="flex items-center gap-2 w-full mt-2">
+                  <span className="font-bold" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px", letterSpacing: "0.04em", color: "var(--text-primary)" }}>
+                    {selectedPlant ? selectedPlant.name : `${plants.length} PLANTS`}
+                  </span>
+                  {!selectedPlant && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.1)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      {openCount} open
+                    </span>
+                  )}
+                  <ChevronUp size={14} className="ml-auto shrink-0" style={{ color: "var(--text-muted)" }} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 w-full mt-2">
+                  {selectedPlant ? (
+                    <>
+                      <button onClick={e => { e.stopPropagation(); setSelectedId(null); }}
+                        className="flex items-center justify-center rounded-md shrink-0"
+                        style={{ width: "24px", height: "24px", background: "var(--asphalt-surface)", color: "var(--text-muted)" }}>
+                        <X size={12} />
+                      </button>
+                      <span className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)", fontFamily: "'Barlow', sans-serif" }}>
+                        {selectedPlant.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xs uppercase" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>
+                      {userCoords ? "Sorted by distance" : "Sorted by status"}
+                    </span>
+                  )}
+                  <ChevronDown size={14} className="ml-auto shrink-0" style={{ color: "var(--text-muted)" }} />
+                </div>
+              )}
+            </div>
+
+            {/* Body */}
+            {sheetState !== "peek" && (
+              <div className="flex-1 overflow-y-auto">
+                {selectedPlant ? (
+                  <div className="px-4 py-3"><MobilePlantDetail plant={selectedPlant} /></div>
+                ) : (
+                  <PlantList plants={sortedPlants} selectedId={selectedId} onSelectPlant={id => { setSelectedId(id); setSheetState("half"); }} loading={loading} initialVisible={4} />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop layout ──
+  return (
+    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "var(--asphalt)" }}>
+      {toolbar}
+      <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* Sidebar */}
         <div
           className="flex flex-col overflow-hidden transition-all duration-200 shrink-0"
@@ -154,129 +243,11 @@ export default function AsphaltApp() {
           <MapView plants={plants} selectedId={selectedId} onSelectPlant={id => { setSelectedId(id); setSidebarOpen(true); }} userCoords={userCoords} />
         </div>
       </div>
-
-      {/* ── Mobile layout (below sm) ── */}
-      <div
-        className="flex sm:hidden flex-1 relative overflow-hidden"
-        style={{ minHeight: 0 }}
-      >
-        {/* Map fills entire area */}
-        <div className="absolute inset-0">
-          <MapView
-            plants={plants}
-            selectedId={selectedId}
-            onSelectPlant={id => { setSelectedId(id); setSheetState("half"); }}
-            userCoords={userCoords}
-          />
-        </div>
-
-        {/* Bottom sheet — sits above map, below toolbar (toolbar is outside this div) */}
-        <div
-          className="absolute bottom-0 left-0 right-0 flex flex-col rounded-t-2xl"
-          style={{
-            height: SHEET_HEIGHTS[sheetState],
-            background: "var(--asphalt-mid)",
-            borderTop: "1px solid var(--asphalt-border)",
-            boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
-            transition: "height 0.25s cubic-bezier(0.32,0.72,0,1)",
-            zIndex: 400,
-            overflow: "hidden",
-          }}
-        >
-          {/* Handle + header row */}
-          <div
-            className="relative flex items-center px-4 shrink-0 cursor-pointer select-none"
-            style={{
-              height: "44px",
-              borderBottom: sheetState !== "peek" ? "1px solid var(--asphalt-border)" : "none",
-            }}
-            onClick={() => setSheetState(s => s === "peek" ? "half" : s === "half" ? "full" : "peek")}
-          >
-            {/* Drag pill */}
-            <div
-              className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full"
-              style={{ width: "36px", height: "4px", background: "var(--asphalt-border)" }}
-            />
-
-            {/* Peek summary */}
-            {sheetState === "peek" && (
-              <div className="flex items-center gap-2 w-full mt-2">
-                <span
-                  className="font-bold"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "14px", letterSpacing: "0.04em", color: "var(--text-primary)" }}
-                >
-                  {selectedPlant ? selectedPlant.name : `${plants.length} PLANTS`}
-                </span>
-                {!selectedPlant && (
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded"
-                    style={{ background: "rgba(34,197,94,0.1)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.2)" }}
-                  >
-                    {openCount} open
-                  </span>
-                )}
-                <ChevronUp size={14} className="ml-auto shrink-0" style={{ color: "var(--text-muted)" }} />
-              </div>
-            )}
-
-            {/* Expanded header */}
-            {sheetState !== "peek" && (
-              <div className="flex items-center gap-2 w-full mt-2">
-                {selectedPlant ? (
-                  <>
-                    <button
-                      onClick={e => { e.stopPropagation(); setSelectedId(null); }}
-                      className="flex items-center justify-center rounded-md shrink-0"
-                      style={{ width: "24px", height: "24px", background: "var(--asphalt-surface)", color: "var(--text-muted)" }}
-                    >
-                      <X size={12} />
-                    </button>
-                    <span
-                      className="text-sm font-semibold truncate"
-                      style={{ color: "var(--text-primary)", fontFamily: "'Barlow', sans-serif" }}
-                    >
-                      {selectedPlant.name}
-                    </span>
-                  </>
-                ) : (
-                  <span
-                    className="text-xs uppercase"
-                    style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}
-                  >
-                    {userCoords ? "Sorted by distance" : "Sorted by status"}
-                  </span>
-                )}
-                <ChevronDown size={14} className="ml-auto shrink-0" style={{ color: "var(--text-muted)" }} />
-              </div>
-            )}
-          </div>
-
-          {/* Sheet body — only rendered when expanded */}
-          {sheetState !== "peek" && (
-            <div className="flex-1 overflow-y-auto">
-              {selectedPlant ? (
-                <div className="px-4 py-3">
-                  <MobilePlantDetail plant={selectedPlant} />
-                </div>
-              ) : (
-                <PlantList
-                  plants={sortedPlants}
-                  selectedId={selectedId}
-                  onSelectPlant={id => { setSelectedId(id); setSheetState("half"); }}
-                  loading={loading}
-                  initialVisible={4}
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
 
 function MobilePlantDetail({ plant }: { plant: Plant }) {
-  // Dynamic import to avoid circular issues
   const { getFullSchedule } = require("@/lib/utils");
   const schedule: { day: string; hours: string }[] = getFullSchedule(plant.hours);
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(plant.address)}`;
@@ -284,18 +255,9 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
 
   return (
     <div className="space-y-4 pb-6">
-      {/* Status */}
       <div>
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-          style={{
-            background: plant.isOpen ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.1)",
-            color: plant.isOpen ? "#4ade80" : "#f87171",
-            border: `1px solid ${plant.isOpen ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`,
-            fontFamily: "'Barlow Condensed', sans-serif",
-            letterSpacing: "0.06em",
-          }}
-        >
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+          style={{ background: plant.isOpen ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.1)", color: plant.isOpen ? "#4ade80" : "#f87171", border: `1px solid ${plant.isOpen ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.2)"}`, fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.06em" }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: plant.isOpen ? "#4ade80" : "#f87171", display: "inline-block" }} />
           {plant.statusText}
         </span>
@@ -303,11 +265,9 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
         {plant.distance != null && <p className="text-xs mt-0.5" style={{ color: "var(--amber)" }}>{plant.distance.toFixed(1)} miles away</p>}
       </div>
 
-      {/* Actions */}
       <div className="grid grid-cols-2 gap-2">
         {plant.phone ? (
-          <a href={`tel:${plant.phone}`}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
+          <a href={`tel:${plant.phone}`} className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold"
             style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-primary)" }}>
             📞 Call
           </a>
@@ -319,20 +279,15 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
         </a>
       </div>
 
-      {/* Services */}
       <div>
         <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>Services</p>
         <div className="flex flex-wrap gap-1.5">
           {plant.services.map(s => (
-            <span key={s} className="px-2.5 py-1 rounded-lg text-xs"
-              style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>
-              {s}
-            </span>
+            <span key={s} className="px-2.5 py-1 rounded-lg text-xs" style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>{s}</span>
           ))}
         </div>
       </div>
 
-      {/* Hours */}
       <div>
         <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>Hours</p>
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--asphalt-border)" }}>
@@ -349,10 +304,7 @@ function MobilePlantDetail({ plant }: { plant: Plant }) {
       {plant.notes && (
         <div>
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--text-muted)", fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.1em" }}>Notes</p>
-          <p className="text-xs leading-relaxed rounded-xl p-3 italic"
-            style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>
-            {plant.notes}
-          </p>
+          <p className="text-xs leading-relaxed rounded-xl p-3 italic" style={{ background: "var(--asphalt-surface)", border: "1px solid var(--asphalt-border)", color: "var(--text-secondary)" }}>{plant.notes}</p>
         </div>
       )}
     </div>
