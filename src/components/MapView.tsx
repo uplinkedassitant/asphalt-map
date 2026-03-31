@@ -1,3 +1,4 @@
+"use client";
 import "leaflet/dist/leaflet.css";"use client";
 import { useEffect, useRef } from "react";
 import { Plant } from "@/types/plant";
