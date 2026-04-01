@@ -208,8 +208,10 @@ export default function AsphaltApp() {
           </div>
         )}
 
-        {/* Divider + map wrapper — full-width separator, map padded with rounded corners */}
-        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--border)", gap: "8px", paddingTop: "6px" }}>
+        {/* Divider between list and map */}
+        <div style={{ height: '6px', background: 'var(--border)', flexShrink: 0 }} />
+
+        {/* Map — fills remaining space */}
         <div style={{ flex: 1, minHeight: 0, margin: "0 8px 8px 8px", borderRadius: "12px", overflow: "hidden" }}>
           <MapView
             plants={plants}
@@ -218,7 +220,6 @@ export default function AsphaltApp() {
             userCoords={userCoords}
             fitBoundsTo={fitBoundsTo}
           />
-        </div>
         </div>
       </div>
     );
