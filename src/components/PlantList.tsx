@@ -10,28 +10,22 @@ interface PlantListProps {
   selectedId: string | null;
   onSelectPlant: (id: string) => void;
   loading?: boolean;
-  /** How many to show before "Show more". Default 4 */
   initialVisible?: number;
 }
 
 export default function PlantList({
-  plants,
-  selectedId,
-  onSelectPlant,
-  loading,
-  initialVisible = 4,
+  plants, selectedId, onSelectPlant, loading, initialVisible = 4,
 }: PlantListProps) {
   const [showAll, setShowAll] = useState(false);
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-2 p-3">
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "10px" }}>
         {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="rounded-xl animate-pulse"
-            style={{ height: "72px", background: "var(--surface)", animationDelay: `${i * 80}ms` }}
-          />
+          <div key={i} className="animate-pulse" style={{
+            height: "72px", borderRadius: "12px",
+            background: "var(--surface)", animationDelay: `${i * 80}ms`,
+          }} />
         ))}
       </div>
     );
@@ -39,9 +33,9 @@ export default function PlantList({
 
   if (plants.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 gap-2">
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "32px", gap: "8px" }}>
         <MapPin size={22} style={{ color: "var(--text-muted)" }} />
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>No plants found</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>No plants found</p>
       </div>
     );
   }
@@ -50,39 +44,30 @@ export default function PlantList({
   const hiddenCount = plants.length - initialVisible;
 
   return (
-    <div className="flex flex-col gap-1.5 p-2.5">
-      {visiblePlants.map((plant, i) => {
-        const isSelected = selectedId === plant.id;
-        return (
-          <PlantCard
-            key={plant.id}
-            plant={plant}
-            isSelected={isSelected}
-            index={i}
-            onSelect={() => onSelectPlant(plant.id)}
-          />
-        );
-      })}
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "10px" }}>
+      {visiblePlants.map((plant, i) => (
+        <PlantCard
+          key={plant.id}
+          plant={plant}
+          isSelected={selectedId === plant.id}
+          index={i}
+          onSelect={() => onSelectPlant(plant.id)}
+        />
+      ))}
 
-      {/* Show more / Show less toggle */}
       {plants.length > initialVisible && (
         <button
-          onClick={() => setShowAll((v) => !v)}
-          className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-semibold transition-colors mt-0.5"
+          onClick={() => setShowAll(v => !v)}
           style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            color: "var(--text-secondary)",
+            width: "100%", height: "40px", borderRadius: "12px",
+            background: "var(--surface)", border: "1px solid var(--border)",
+            color: "var(--text-secondary)", cursor: "pointer",
             fontFamily: "'Barlow Condensed', sans-serif",
-            letterSpacing: "0.06em",
+            fontSize: "12px", fontWeight: 700, letterSpacing: "0.08em",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
           }}
-          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "#3a3f4d"; el.style.color = "var(--text-primary)"; }}
-          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = "var(--border)"; el.style.color = "var(--text-secondary)"; }}
         >
-          <ChevronDown
-            size={13}
-            style={{ transition: "transform 0.2s", transform: showAll ? "rotate(180deg)" : "rotate(0deg)" }}
-          />
+          <ChevronDown size={13} style={{ transition: "transform 0.2s", transform: showAll ? "rotate(180deg)" : "rotate(0deg)" }} />
           {showAll ? "SHOW LESS" : `SHOW ${hiddenCount} MORE`}
         </button>
       )}
@@ -90,68 +75,61 @@ export default function PlantList({
   );
 }
 
-function PlantCard({
-  plant,
-  isSelected,
-  index,
-  onSelect,
-}: {
-  plant: Plant;
-  isSelected: boolean;
-  index: number;
-  onSelect: () => void;
+function PlantCard({ plant, isSelected, index, onSelect }: {
+  plant: Plant; isSelected: boolean; index: number; onSelect: () => void;
 }) {
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left rounded-xl p-3 transition-all duration-150 focus:outline-none slide-in"
       style={{
+        // Fixed height so all cards are identical size
+        height: "80px",
+        width: "100%",
+        borderRadius: "12px",
+        padding: "10px 12px",
         background: isSelected ? "var(--hover)" : "var(--surface)",
-        border: `1px solid ${isSelected ? "var(--amber)" : "var(--border)"}`,
-        animationDelay: `${index * 30}ms`,
-      }}
-      onMouseEnter={e => {
-        if (!isSelected) {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "#3a3f4d";
-          el.style.background = "var(--hover)";
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isSelected) {
-          const el = e.currentTarget as HTMLElement;
-          el.style.borderColor = "var(--border)";
-          el.style.background = "var(--surface)";
-        }
+        border: `1.5px solid ${isSelected ? "var(--amber)" : "var(--border)"}`,
+        cursor: "pointer",
+        textAlign: "left",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        boxSizing: "border-box",
+        transition: "border-color 0.15s, background 0.15s",
       }}
     >
-      <div className="flex items-start justify-between gap-2 mb-1.5">
-        <div className="flex-1 min-w-0">
-          <div
-            className="font-semibold text-sm truncate leading-tight"
-            style={{
-              color: isSelected ? "var(--amber-light)" : "var(--text-primary)",
-              fontFamily: "'Barlow', sans-serif",
-            }}
-          >
+      {/* Top row: name + badge */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: "'Barlow', sans-serif", fontSize: "13px", fontWeight: 700,
+            color: isSelected ? "var(--amber)" : "var(--text-primary)",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            lineHeight: "1.2",
+          }}>
             {plant.name}
           </div>
-          <div className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)" }}>
+          <div style={{
+            fontSize: "11px", color: "var(--text-muted)",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            marginTop: "2px",
+          }}>
             {plant.address}
           </div>
         </div>
         <StatusBadge isOpen={!!plant.isOpen} />
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
-          <Clock size={10} style={{ color: "var(--text-muted)" }} />
-          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
+      {/* Bottom row: hours + distance */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <Clock size={10} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+          <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
             {getTodayHours(plant.hours)}
           </span>
         </div>
         {plant.distance != null && (
-          <div className="ml-auto text-xs flex items-center gap-0.5" style={{ color: "var(--text-muted)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "var(--text-muted)" }}>
             <MapPin size={9} />
             {plant.distance.toFixed(1)} mi
           </div>
@@ -163,28 +141,20 @@ function PlantCard({
 
 function StatusBadge({ isOpen }: { isOpen: boolean }) {
   return (
-    <span
-      className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full"
-      style={{
-        background: isOpen ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-        color: isOpen ? "#16a34a" : "#dc2626",
-        border: `1px solid ${isOpen ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
-        fontFamily: "'Barlow Condensed', sans-serif",
-        letterSpacing: "0.05em",
-        fontSize: "11px",
-        fontWeight: 700,
-      }}
-    >
-      <span
-        className={isOpen ? "pulse-dot" : ""}
-        style={{
-          display: "inline-block",
-          width: "5px",
-          height: "5px",
-          borderRadius: "50%",
-          background: isOpen ? "#4ade80" : "#f87171",
-        }}
-      />
+    <span style={{
+      flexShrink: 0,
+      display: "inline-flex", alignItems: "center", gap: "4px",
+      padding: "2px 8px", borderRadius: "999px",
+      background: isOpen ? "rgba(22,163,74,0.1)" : "rgba(220,38,38,0.1)",
+      color: isOpen ? "#16a34a" : "#dc2626",
+      border: `1px solid ${isOpen ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.25)"}`,
+      fontSize: "11px", fontWeight: 700,
+      fontFamily: "'Barlow Condensed', sans-serif", letterSpacing: "0.05em",
+    }}>
+      <span className={isOpen ? "pulse-dot" : ""} style={{
+        display: "inline-block", width: "5px", height: "5px", borderRadius: "50%",
+        background: isOpen ? "#16a34a" : "#dc2626",
+      }} />
       {isOpen ? "OPEN" : "CLOSED"}
     </span>
   );

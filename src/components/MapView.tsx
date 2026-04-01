@@ -77,8 +77,13 @@ export default function MapView({ plants, selectedId, onSelectPlant, userCoords,
     if (!mapRef.current || !selectedId) return;
     const plant = plants.find((p) => p.id === selectedId);
     if (plant) {
+      // Pan to plant, then offset map down so popup renders in the visible area
       mapRef.current.setView([plant.latitude, plant.longitude], 11, { animate: true });
-      markersRef.current.get(selectedId)?.openPopup();
+      setTimeout(() => {
+        // Shift map up by ~120px so the popup above the marker is fully visible
+        mapRef.current?.panBy([0, -120], { animate: true });
+        markersRef.current.get(selectedId)?.openPopup();
+      }, 350);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
@@ -173,6 +178,8 @@ export default function MapView({ plants, selectedId, onSelectPlant, userCoords,
   }
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%", minHeight: "300px" }} />
+    <div style={{ width: "100%", height: "100%", minHeight: "300px", borderRadius: "12px", overflow: "hidden" }}>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    </div>
   );
 }
