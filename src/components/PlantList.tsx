@@ -98,8 +98,8 @@ function PlantCard({ plant, isSelected, index, onSelect }: {
         transition: "border-color 0.15s, background 0.15s",
       }}
     >
-      {/* Top row: name + badge */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+      {/* Top row: name block left, badge pinned right */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: "'Barlow', sans-serif", fontSize: "13px", fontWeight: 700,
@@ -117,7 +117,10 @@ function PlantCard({ plant, isSelected, index, onSelect }: {
             {plant.address}
           </div>
         </div>
-        <StatusBadge isOpen={!!plant.isOpen} />
+        {/* Badge — always right-aligned, never wraps */}
+        <div style={{ flexShrink: 0, marginLeft: "auto" }}>
+          <StatusBadge isOpen={!!plant.isOpen} />
+        </div>
       </div>
 
       {/* Bottom row: hours + distance */}

@@ -212,7 +212,7 @@ export default function AsphaltApp() {
         <div style={{ height: '6px', background: 'var(--border)', flexShrink: 0 }} />
 
         {/* Map — fills remaining space */}
-        <div style={{ flex: 1, minHeight: 0, padding: "0 8px 8px 8px" }}>
+        <div style={{ flex: 1, minHeight: 0, margin: "0 8px 8px 8px", borderRadius: "12px", overflow: "hidden" }}>
           <MapView
             plants={plants}
             selectedId={selectedId}
@@ -258,7 +258,7 @@ export default function AsphaltApp() {
           )}
         </div>
         {/* Map */}
-        <div className="flex-1" style={{ padding: "8px" }}>
+        <div className="flex-1" style={{ margin: "8px", borderRadius: "12px", overflow: "hidden" }}>
           <MapView plants={plants} selectedId={selectedId} onSelectPlant={id => { setSelectedId(id); setSidebarOpen(true); }} userCoords={userCoords} />
         </div>
       </div>

@@ -178,8 +178,6 @@ export default function MapView({ plants, selectedId, onSelectPlant, userCoords,
   }
 
   return (
-    <div style={{ width: "100%", height: "100%", minHeight: "300px", borderRadius: "12px", overflow: "hidden" }}>
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
-    </div>
+    <div ref={containerRef} style={{ width: "100%", height: "100%", minHeight: "300px" }} />
   );
 }
