@@ -208,11 +208,11 @@ export default function AsphaltApp() {
           </div>
         )}
 
-        {/* Divider between list and map */}
-        <div style={{ height: '6px', background: 'var(--border)', flexShrink: 0 }} />
+        {/* Divider */}
+        <div style={{ height: "6px", flexShrink: 0, background: "var(--border)" }} />
 
-        {/* Map — fills remaining space */}
-        <div style={{ flex: 1, minHeight: 0, margin: "0 8px 8px 8px", borderRadius: "12px", overflow: "hidden" }}>
+        {/* Map */}
+        <div style={{ flex: 1, minHeight: 0 }}>
           <MapView
             plants={plants}
             selectedId={selectedId}
@@ -258,7 +258,7 @@ export default function AsphaltApp() {
           )}
         </div>
         {/* Map */}
-        <div className="flex-1" style={{ margin: "8px", borderRadius: "12px", overflow: "hidden" }}>
+        <div style={{ flex: 1, minHeight: 0 }}>
           <MapView plants={plants} selectedId={selectedId} onSelectPlant={id => { setSelectedId(id); setSidebarOpen(true); }} userCoords={userCoords} />
         </div>
       </div>
